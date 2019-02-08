@@ -12,7 +12,7 @@ import javax.persistence.PersistenceContext;
 
 /**
  *
- * @author pupil
+ * @author Melnikov
  */
 @Stateless
 public class UserFacade extends AbstractFacade<User> {
@@ -29,8 +29,16 @@ public class UserFacade extends AbstractFacade<User> {
         super(User.class);
     }
 
-    public User findUserByLogin(String login) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public User findByLogin(String login) {
+        try {
+            return (User) em.createQuery("SELECT u FROM User u WHERE u.login=:login")
+                    .setParameter("login", login)
+                    .getSingleResult();
+        } catch (Exception e) {
+            return null;
+        }
     }
+
+    
     
 }

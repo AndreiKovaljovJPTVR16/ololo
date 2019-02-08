@@ -9,8 +9,9 @@ import entity.Book;
 import entity.Reader;
 import entity.User;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -23,18 +24,21 @@ import javax.servlet.http.HttpSession;
 import session.BookFacade;
 import session.ReaderFacade;
 import session.UserFacade;
-import util.Encription;
 
 /**
  *
- * @author Melnikov
+ * @author pupil
  */
 @WebServlet(name = "Controller", urlPatterns = {
     "/showLogin",
     "/login",
     "/logout",
     "/showAddNewBook",
-    "/addBook",})
+    "/addBook",
+    "/showRegistration",
+    "/registration",
+    "/deleteBook",
+    "/deleteUser",})
 public class Controller extends HttpServlet {
 
     @EJB
@@ -54,9 +58,11 @@ public class Controller extends HttpServlet {
      * @throws IOException if an I/O error occurs
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, NoSuchAlgorithmException {
+            throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         request.setCharacterEncoding("UTF-8");
+        User regUser = null;
+        HttpSession session = request.getSession(false);
         String path = request.getServletPath();
         if (path != null) {
             switch (path) {
@@ -66,24 +72,30 @@ public class Controller extends HttpServlet {
                 case "/login":
                     String login = request.getParameter("login");
                     String password = request.getParameter("password");
-                    User regUser = userFacade.findUserByLogin(login);
+                    regUser = userFacade.findByLogin(login);
                     if (regUser == null) {
-                        request.setAttribute("info", "Неправильный логин или пароль!");
-                        request.getRequestDispatcher("/showLogin.jsp").forward(request, response);
+                        request.setAttribute("info", "Нет такого пользователя");
+                        request.getRequestDispatcher("/index.jsp").forward(request, response);
                     }
-                    Encription encription = new Encription();
-                    String encriptPassword = encription.getEncriptionPass(password);
-                    if (!encriptPassword.equals(regUser.getPassword())) {
-                        request.setAttribute("info", "Неправильный логин или пароль!");
-                        request.getRequestDispatcher("/showLogin.jsp").forward(request, response);
+                    String encriptPass = setEncriptPass(password, "");
+
+                    if (encriptPass != null && !encriptPass.equals(regUser.getPassword())) {
+                        request.setAttribute("info", "Нет такого пользователя");
+                        request.getRequestDispatcher("/showRegistration.jsp").forward(request, response);
                     }
-                    HttpSession session = request.getSession(true);
+                    session = request.getSession(true);
                     session.setAttribute("regUser", regUser);
-                    request.setAttribute("info", "Привет " + regUser.getName() + ",Вы вошли");
+                    request.setAttribute("info", "Привет " + regUser.getReader().getName() + ", Вы вошли");
                     request.getRequestDispatcher("/index.jsp").forward(request, response);
                     break;
-
                 case "/logout":
+                    request.setAttribute("info", "Вы вышли");
+                    request.getRequestDispatcher("/index.jsp").forward(request, response);
+                    break;
+                case "/showRegistration":
+                    request.getRequestDispatcher("/showRegistration.jsp").forward(request, response);
+                    break;
+                case "/registration":
                     String name = request.getParameter("name");
                     String surname = request.getParameter("surname");
                     String email = request.getParameter("email");
@@ -91,40 +103,92 @@ public class Controller extends HttpServlet {
                     String password1 = request.getParameter("password1");
                     String password2 = request.getParameter("password2");
                     if (!password1.equals(password2)) {
-                        request.setAttribute("info", "Нет такого пользователя!");
-                        request.getRequestDispatcher("/showRegistartion.jsp").forward(request, response);
-
+                        request.setAttribute("info", "Нет такого пользователя");
+                        request.getRequestDispatcher("/index.jsp").forward(request, response);
                     }
-                    encriptPassword = setEncriptPass(password1, "");
+                    encriptPass = setEncriptPass(password1, "");
                     Reader reader = new Reader(email, name, surname);
                     readerFacade.create(reader);
-                    User user = new User(login, password, true, reader);
-
-                    request.setAttribute("info", "Вы вошли");
-                    request.getRequestDispatcher("/index.jsp").forward(request, response);
-
+                    User user = new User(login, encriptPass, true, reader);
+                    userFacade.create(user);
                     request.getRequestDispatcher("/index.jsp").forward(request, response);
                     break;
-
-                case "/showRegistration":
-                    request.getRequestDispatcher("/showRegistartion.jsp").forward(request, response);
-                    break;
-
                 case "/showAddNewBook":
                     request.getRequestDispatcher("/showAddNewBook.jsp").forward(request, response);
                     break;
+                case "/deleteBook":
+                    if (session == null) {
+                        request.getRequestDispatcher("/showLogin").forward(request, response);
+                        break;
 
+                    }
+                    regUser = (User) session.getAttribute("regUser");
+
+                    if (regUser == null) {
+                        request.getRequestDispatcher("/showLogin").forward(request, response);
+                    }
+
+                    Book book = bookFacade.findByIsbn("TestIsbn");
+                    bookFacade.remove(book);
+                    request.setAttribute("info", "тестовая книга удалена");
+                    request.getRequestDispatcher("/index.jsp").forward(request, response);
+                    break;
+                case "/deleteUser":
+                    if (session == null) {
+                        request.getRequestDispatcher("/showLogin").forward(request, response);
+                        break;
+
+                    }
+                    regUser = (User) session.getAttribute("regUser");
+
+                    if (regUser == null) {
+                        request.getRequestDispatcher("/showLogin").forward(request, response);
+                    }
+                    user = userFacade.findByLogin("TestLogin");
+                    reader = user.getReader();
+                    userFacade.remove(user);
+                    readerFacade.remove(reader);
+                    request.setAttribute("info", "тестовый пользователь удален");
+                    request.getRequestDispatcher("/index.jsp").forward(request, response);
+                    break;
                 case "/addBook":
-                    String name = request.getParameter("name");
+
+                    if (session == null) {
+                        request.getRequestDispatcher("/showLogin").forward(request, response);
+                        break;
+
+                    }
+                    regUser = (User) session.getAttribute("regUser");
+
+                    if (regUser == null) {
+                        request.getRequestDispatcher("/showLogin").forward(request, response);
+                    }
+
+                    name = request.getParameter("name");
                     String author = request.getParameter("author");
                     String isbn = request.getParameter("isbn");
                     String count = request.getParameter("count");
-                    Book book = new Book(isbn, name, author, Integer.parseInt(count));
+                    book = new Book(isbn, name, author, Integer.parseInt(count));
                     bookFacade.create(book);
                     request.setAttribute("info", "Новая книга добавлена");
                     request.getRequestDispatcher("/index.jsp").forward(request, response);
                     break;
             }
+        }
+    }
+
+    public String setEncriptPass(String password, String salts) {
+        password = salts + password;
+        MessageDigest m;
+        try {
+            m = MessageDigest.getInstance("SHA-256");
+            m.update(password.getBytes(), 0, password.length());
+            return new BigInteger(1, m.digest()).toString(16);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(Controller.class.getName())
+                    .log(Level.SEVERE,
+                            "Не поддерживается алгоритм хеширования", ex);
+            return null;
         }
     }
 

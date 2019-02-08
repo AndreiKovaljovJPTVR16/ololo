@@ -23,6 +23,6 @@
             <input id="btnEnter" type="submit" value="Войти">
             <br><br>
             <a id="showRegistration" href="showRegistration">Зарегистрироваться</a>
-         </form>
+        </form>
     </body>
 </html>

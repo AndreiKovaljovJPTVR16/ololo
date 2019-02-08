@@ -10,5 +10,5 @@
         <property name="URL" value="jdbc:mysql://localhost:3306/ptvr16webseleniumtest?zeroDateTimeBehavior=convertToNull&amp;useUnicode=true&amp;characterEncoding=utf8"/>
         <property name="driverClass" value="com.mysql.jdbc.Driver"/>
     </jdbc-connection-pool>
-    <jdbc-resource enabled="true" jndi-name="java:app/jdbc/jptvr16webseleniumtest" object-type="user" pool-name="mysql_ptvr16webseleniumtest_ptvr16webseleniumtestPool"/>
+    <jdbc-resource enabled="true" jndi-name="java:app/jdbc/ptvr16webseleniumtestDS" object-type="user" pool-name="mysql_ptvr16webseleniumtest_ptvr16webseleniumtestPool"/>
 </resources>

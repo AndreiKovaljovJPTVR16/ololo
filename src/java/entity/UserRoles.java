@@ -14,7 +14,8 @@ import javax.persistence.OneToOne;
 
 /**
  *
- * @author Melnikov
+ * @author pupil
+ * 
  */
 @Entity
 public class UserRoles {

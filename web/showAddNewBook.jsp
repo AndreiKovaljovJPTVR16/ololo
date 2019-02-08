@@ -13,25 +13,21 @@
         <title>Библиотека</title>
     </head>
     <body>
-        <h1>Добавление книги/h1>
-            <p id="info">${info}</p>
-            <p>Введите данные книги</p><br>
-            <form action="addBook" method="POST">
-                Имя:<br>
-                <input type="text" name="name"><br>
-                Автор:<br>
-                <input type="text" name="author"><br>
-                ISBN:<br>
-                <input type="text" name="isbn"><br>
-                <br>
-                Логин:<br>
-                <input type="text" name="login"><br>
-                <br>
-                Количество экземпляров:<br>
-                <input type="text" name="count"><br>
-                <br>
-
-                <input id="btnAdd" type="submit" value="Добавить">
-            </form>
+        <h1>Новая книга</h1>
+        <p id="info">${info}</p>
+        <p>Введите данные книги</p><br>
+        <form action="addBook" method="POST">
+            Имя:<br>
+            <input  type="text" name="name"><br>
+            Автор:<br>
+            <input  type="text" name="author"><br>
+            isbn:<br>
+            <input  type="text" name="isbn"><br>
+            <br>
+            Количество экземпляров:<br>
+            <input type="text" name="count"><br>
+            <br>
+            <input id="btnAdd" type="submit" value="Добавить книгу">
+        </form>
     </body>
 </html>

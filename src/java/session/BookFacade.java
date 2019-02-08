@@ -12,7 +12,7 @@ import javax.persistence.PersistenceContext;
 
 /**
  *
- * @author pupil
+ * @author Melnikov
  */
 @Stateless
 public class BookFacade extends AbstractFacade<Book> {
@@ -27,6 +27,12 @@ public class BookFacade extends AbstractFacade<Book> {
 
     public BookFacade() {
         super(Book.class);
+    }
+
+    public Book findByIsbn(String testIsbn) {
+        return (Book) em.createQuery("SELECT b FROM Book b WHERE b.isbn=:isbn")
+                .setParameter("isbn", testIsbn)
+                .getSingleResult();
     }
     
 }
